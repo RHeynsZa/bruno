@@ -17,6 +17,7 @@ import StyledWrapper from './StyledWrapper';
 import Vars from './Vars/index';
 import DotIcon from 'components/Icons/Dot';
 import Overview from './Overview/index';
+import { updateOpenApiCollection } from 'utils/importers/openapi-collection';
 
 const ContentIndicator = () => {
   return (
@@ -92,6 +93,24 @@ const CollectionSettings = ({ collection }) => {
         toast.success('Collection settings updated successfully');
       })
       .catch((err) => console.log(err) && toast.error('Failed to update collection settings'));
+  };
+
+  const handleUpdateCollection = (updatedSpec) => {
+    updateOpenApiCollection(collection, updatedSpec)
+      .then((updatedCollection) => {
+        dispatch(updateBrunoConfig(updatedCollection, collection.uid))
+          .then(() => {
+            toast.success('Collection updated successfully');
+          })
+          .catch((err) => {
+            console.error(err);
+            toast.error('Failed to update collection');
+          });
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error('Failed to update collection');
+      });
   };
 
   const getTabPanel = (tab) => {
@@ -176,6 +195,9 @@ const CollectionSettings = ({ collection }) => {
           Client Certificates
           {clientCertConfig.length > 0 && <ContentIndicator />}
         </div>
+        <button className="btn btn-sm btn-secondary ml-2" onClick={() => handleUpdateCollection(updatedSpec)}>
+          Update Collection
+        </button>
       </div>
       <section className="mt-4 h-full">{getTabPanel(tab)}</section>
     </StyledWrapper>

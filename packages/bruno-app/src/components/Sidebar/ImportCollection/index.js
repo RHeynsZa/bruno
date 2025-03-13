@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import importBrunoCollection from 'utils/importers/bruno-collection';
 import importPostmanCollection from 'utils/importers/postman-collection';
 import importInsomniaCollection from 'utils/importers/insomnia-collection';
-import importOpenapiCollection from 'utils/importers/openapi-collection';
-import { toastError } from 'utils/common/error';
+import importOpenapiCollection, { updateOpenApiCollection } from 'utils/importers/openapi-collection';
+import { toastError, toastSuccess } from 'utils/common/error';
 import Modal from 'components/Modal';
 
-const ImportCollection = ({ onClose, handleSubmit }) => {
+const ImportCollection = ({ onClose, handleSubmit, existingCollection }) => {
   const [options, setOptions] = useState({
     enablePostmanTranslations: {
       enabled: true,
@@ -15,6 +15,7 @@ const ImportCollection = ({ onClose, handleSubmit }) => {
         "When enabled, Bruno will try as best to translate the scripts from the imported collection to Bruno's format."
     }
   });
+
   const handleImportBrunoCollection = () => {
     importBrunoCollection()
       .then(({ collection }) => {
@@ -40,12 +41,23 @@ const ImportCollection = ({ onClose, handleSubmit }) => {
   };
 
   const handleImportOpenapiCollection = () => {
-    importOpenapiCollection()
-      .then(({ collection }) => {
-        handleSubmit({ collection });
-      })
-      .catch((err) => toastError(err, 'OpenAPI v3 Import collection failed'));
+    if (existingCollection) {
+      updateOpenApiCollection(existingCollection)
+        .then((updatedCollection) => {
+          handleSubmit({ collection: updatedCollection });
+          toastSuccess('OpenAPI collection updated successfully');
+        })
+        .catch((err) => toastError(err, 'OpenAPI v3 Update collection failed'));
+    } else {
+      importOpenapiCollection()
+        .then(({ collection }) => {
+          handleSubmit({ collection });
+          toastSuccess('OpenAPI collection imported successfully');
+        })
+        .catch((err) => toastError(err, 'OpenAPI v3 Import collection failed'));
+    }
   };
+
   const toggleOptions = (event, optionKey) => {
     setOptions({
       ...options,
@@ -55,6 +67,7 @@ const ImportCollection = ({ onClose, handleSubmit }) => {
       }
     });
   };
+
   const CollectionButton = ({ children, className, onClick }) => {
     return (
       <button
@@ -67,6 +80,7 @@ const ImportCollection = ({ onClose, handleSubmit }) => {
       </button>
     );
   };
+
   return (
     <Modal size="sm" title="Import Collection" hideFooter={true} handleCancel={onClose}>
       <div className="flex flex-col">
