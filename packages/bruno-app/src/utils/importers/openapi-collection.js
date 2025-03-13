@@ -467,4 +467,24 @@ const importCollection = () => {
   });
 };
 
-export default importCollection;
+const updateOpenApiCollection = (existingCollection, updatedSpec) => {
+  return new Promise((resolve, reject) => {
+    parseOpenApiCollection(updatedSpec)
+      .then((updatedCollection) => {
+        // Preserve existing environments and configurations
+        updatedCollection.environments = existingCollection.environments;
+        updatedCollection.configurations = existingCollection.configurations;
+
+        // Update the collection items
+        existingCollection.items = updatedCollection.items;
+
+        resolve(existingCollection);
+      })
+      .catch((err) => {
+        console.error(err);
+        reject(new BrunoError('Update collection failed: ' + err.message));
+      });
+  });
+};
+
+export { importCollection, updateOpenApiCollection };
